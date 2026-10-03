@@ -8,6 +8,7 @@ recommendation itself (it takes topic/difficulty as plain arguments and
 passes them straight through).
 """
 import streamlit as st
+from types import SimpleNamespace
 
 from src.services import session_service
 from src.ui.session_launch import launch_session
@@ -21,11 +22,13 @@ def test_launch_session_success_sets_view_and_session(monkeypatch):
     )
     st.session_state.clear()
 
-    result = launch_session(settings=object(), fs=object(), child_id="c1", topic="Fractions", difficulty="easy")
+    fake_fs = SimpleNamespace(_uid="parent-1")
+    result = launch_session(settings=object(), fs=fake_fs, child_id="c1", topic="Fractions", difficulty="easy")
 
     assert result is True
     assert st.session_state["current_session"] is fake_session
     assert st.session_state["view"] == "session"
+    assert st.session_state["session_owner_uid"] == "parent-1"
 
 
 def test_launch_session_passes_through_the_given_topic_and_difficulty(monkeypatch):
@@ -38,7 +41,8 @@ def test_launch_session_passes_through_the_given_topic_and_difficulty(monkeypatc
     monkeypatch.setattr("src.ui.session_launch.session_service.generate_learning_experience", fake_generate)
     st.session_state.clear()
 
-    launch_session(settings=object(), fs=object(), child_id="c1", topic="Comparing Fractions", difficulty="hard")
+    fake_fs = SimpleNamespace(_uid="parent-1")
+    launch_session(settings=object(), fs=fake_fs, child_id="c1", topic="Comparing Fractions", difficulty="hard")
 
     assert calls == [("Comparing Fractions", "hard")]
 
